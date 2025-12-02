@@ -16,8 +16,6 @@ const PORT = process.env.PORT || 3000;
 const WHEREBY_API_KEY = process.env.WHEREBY_API_KEY;
 const WHEREBY_API_URL = 'https://api.whereby.dev/v1/meetings';
 
-const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmFwcGVhci5pbiIsImF1ZCI6Imh0dHBzOi8vYXBpLmFwcGVhci5pbi92MSIsImV4cCI6OTAwNzE5OTI1NDc0MDk5MSwiaWF0IjoxNzYyODIwNzUwLCJvcmdhbml6YXRpb25JZCI6MzI4NzY3LCJqdGkiOiI0OGQzYjFlMi02YTljLTQ5NGQtYjlkZC00MTUwNDJmYzAzODAifQ.mQWuhmPEhDxzB3RshbQ4DSwuFRJnnqrQvU2Z4Ew94l0";
-
 app.use(express.json());
 
 app.post('/create-room', async (req, res) => {
