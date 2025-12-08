@@ -52,15 +52,29 @@ io.on('connection', (socket) => {
       });
 
       const data = await response.json();
+      const meetingId = data.meetingId;
       const roomUrl = data.roomUrl;
-      const endDateRes = data.endDate
 
       // 2. Send callRequest to the callee with the roomUrl
-      io.to(users[to]).emit('callRequest', { from, roomUrl });
+      io.to(users[to]).emit('callRequest', { from, meetingId, roomUrl });
 
       console.log(`Room created: ${roomUrl}, sent to ${to}`);
-      console.log(`Expire date: ${endDateRes}`);
     } catch (err) { console.error('Error creating Whereby room:', err); }
+  });
+
+  socket.on('deleteRoom', async ({ meetingId }) => {
+    try {
+      // 3. Delete a Whereby room via API
+      const response = await fetch(`${WHEREBY_API_URL}/${meetingId}`, {
+        method: 'DELETE',
+        headers: {
+          "Authorization": "Bearer " + WHEREBY_API_KEY,
+          "Content-Type": "application/json"
+        }
+      });
+
+      console.log(response.body);
+    } catch (err) { console.error('Error deleting Whereby room:', err); }
   });
 
   // Callee accepts the call
@@ -98,7 +112,7 @@ io.on('connection', (socket) => {
 });
 
 // Start the server
-Server.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
     console.log(`Whereby API Key is set: ${!!WHEREBY_API_KEY}`);
 });
