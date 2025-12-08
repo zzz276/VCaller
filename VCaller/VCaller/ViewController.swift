@@ -15,10 +15,6 @@ class ViewController: UIViewController {
     @IBOutlet weak var profileButton: UIButton!
     @IBOutlet weak var settingsButton: UIButton!
     private let db = Firestore.firestore()
-    private let usernameKey = "username"
-    private let regionKey = "region"
-    private let birthdayKey = "birthday"
-    private let pronounsKey = "pronouns"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,38 +37,44 @@ class ViewController: UIViewController {
     @IBAction func startButtonTapped(_ sender: UIButton) {
         guard let vc = storyboard?.instantiateViewController(withIdentifier: "UsernameViewController") as? UsernameViewController else {
             assertionFailure("Storyboard ID not found")
+            
             return
         }
+        
         navigationController?.pushViewController(vc, animated: true)
     }
 
     @IBAction func settingButtonTapped(_ sender: UIButton) {
         guard let vc = storyboard?.instantiateViewController(withIdentifier: "SettingViewController") as? SettingViewController else {
             assertionFailure("Storyboard ID not found")
+            
             return
         }
+        
         navigationController?.pushViewController(vc, animated: true)
     }
     
     @IBAction func profileButtonTapped(_ sender: UIButton) {
         guard let vc = storyboard?.instantiateViewController(withIdentifier: "ProfileViewController") as? ProfileViewController else {
             assertionFailure("Storyboard ID not found")
+            
             return
         }
+        
         navigationController?.pushViewController(vc, animated: true)
     }
 
     // Connect your Logout button to this action
     @IBAction func logoutButtonTapped(_ sender: UIButton) {
         // Clear saved username
+        let defaults = UserDefaults.standard
+        
         Task {
             do {
-                try await db.collection("users").document(id).setData([ "status": "offline" ], merge: true)
+                try await db.collection("users").document(defaults.string(forKey: idKey)!).setData([ "status": "offline" ], merge: true)
                 print("You are now logged out!")
             } catch { print("Error when logging out: \(error)") }
         }
-        
-        let defaults = UserDefaults.standard
         
         defaults.removeObject(forKey: usernameKey)
         defaults.removeObject(forKey: regionKey)
@@ -101,6 +103,7 @@ private extension UIFont {
     func withWeight(_ weight: UIFont.Weight) -> UIFont {
         let descriptor = fontDescriptor.addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
         let base = UIFont(descriptor: descriptor, size: pointSize)
+        
         return UIFontMetrics.default.scaledFont(for: base)
     }
 }

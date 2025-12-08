@@ -12,7 +12,6 @@ class LoginViewController: UIViewController {
 
     @IBOutlet weak var usernametxt: UITextField!
     private let db = Firestore.firestore()
-    private let usernameKey = "username"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,13 +31,15 @@ class LoginViewController: UIViewController {
         }
 
         // Save username as the login state
+        let defaults = UserDefaults.standard
+        
         Task {
             let querySnapshot = try await db.collection("users").whereField("username", isEqualTo: username).getDocuments()
             
-            if querySnapshot.documents.count == 1 { id = querySnapshot.documents[0].documentID }
-            else { id = generateRandomString() }
+            if querySnapshot.documents.count == 1 { defaults.set(querySnapshot.documents[0].documentID, forKey: idKey) }
+            else { defaults.set(generateRandomString(), forKey: idKey) }
             do {
-                try await db.collection("users").document(id).setData([
+                try await db.collection("users").document(defaults.string(forKey: idKey)!).setData([
                     "username": username,
                     "status": "online",
                 ], merge: true)
@@ -47,8 +48,10 @@ class LoginViewController: UIViewController {
             } catch { print("Error when logging in: \(error)") }
         }
         
-        UserDefaults.standard.set(username, forKey: usernameKey)
-        
+        defaults.set(username, forKey: usernameKey)
+        defaults.set("-", forKey: regionKey)
+        defaults.set("-", forKey: birthdayKey)
+        defaults.set("-", forKey: pronounsKey)
 
         // Swap to Home flow
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
@@ -56,6 +59,7 @@ class LoginViewController: UIViewController {
             switchToRoot(initial)
         } else if let home = storyboard.instantiateViewController(withIdentifier: "ViewController") as? ViewController {
             let nav = UINavigationController(rootViewController: home)
+            
             switchToRoot(nav)
         }
     }
@@ -73,6 +77,7 @@ class LoginViewController: UIViewController {
     
     private func showAlert(title: String, message: String) {
         let ac = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        
         ac.addAction(UIAlertAction(title: "OK", style: .default))
         present(ac, animated: true)
     }

@@ -16,10 +16,6 @@ class ProfileUpdateViewController: UIViewController {
     @IBOutlet weak var birthdayTextField: UITextField!
     @IBOutlet weak var pronounsTextField: UITextField!
     private let db = Firestore.firestore()
-    private let usernameKey = "username"
-    private let regionKey = "region"
-    private let birthdayKey = "birthday"
-    private let pronounsKey = "pronouns"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -73,7 +69,7 @@ class ProfileUpdateViewController: UIViewController {
         // Save all fields (empty strings allowed per your note)
         Task {
             do {
-                try await db.collection("users").document(id).setData([
+                try await db.collection("users").document(defaults.string(forKey: idKey)!).setData([
                     usernameKey: username,
                     regionKey: region,
                     birthdayKey: birthday,
@@ -118,6 +114,7 @@ class ProfileUpdateViewController: UIViewController {
     
     private func showAlert(title: String, message: String) {
         let ac = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        
         ac.addAction(UIAlertAction(title: "OK", style: .default))
         present(ac, animated: true)
     }

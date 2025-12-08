@@ -16,10 +16,6 @@ class ProfileViewController: UIViewController {
     @IBOutlet weak var birthdayLabel: UILabel!
     @IBOutlet weak var pronounsLabel: UILabel!
     private let db = Firestore.firestore()
-    private let usernameKey = "username"
-    private let regionKey = "region"
-    private let birthdayKey = "birthday"
-    private let pronounsKey = "pronouns"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,7 +31,7 @@ class ProfileViewController: UIViewController {
         
         Task {
             do {
-                let document = try await db.collection("users").document(id).getDocument()
+                let document = try await db.collection("users").document(defaults.string(forKey: idKey)!).getDocument()
                 
                 if document.exists {
                     defaults.set(document.get("username"), forKey: usernameKey)
