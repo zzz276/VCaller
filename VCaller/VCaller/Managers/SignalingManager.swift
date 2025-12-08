@@ -9,6 +9,7 @@ import Foundation
 import SocketIO
 
 final class SignalingManager {
+    static let shared = SignalingManager()
     private let manager: SocketManager
     private let socket: SocketIOClient
     
