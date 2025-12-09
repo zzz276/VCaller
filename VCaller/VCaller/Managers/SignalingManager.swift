@@ -33,16 +33,25 @@ final class SignalingManager {
     }
     
     func listeners() {
+        socket.on("getRequest") { data, _ in
+            guard let dict = data.first as? [String: Any],
+                  let meetingId = dict["meetingId"] as? String,
+                  let roomUrl = dict["roomUrl"] as? String else { return }
+        }
+        
         socket.on("callRequest") { data, _ in
             guard let dict = data.first as? [String: Any],
                   let from = dict["from"] as? String,
+                  let meetingId = dict["meetingId"] as? String,
                   let roomUrl = dict["roomUrl"] as? String else { return }
             
             print("Incoming call from \(from)")
+            print("Meeting ID: \(meetingId)")
             print("Room URL: \(roomUrl)")
             
             NotificationCenter.default.post(name: .incomingCall, object: nil, userInfo: [
                 "from": from,
+                "meetingId": meetingId,
                 "roomUrl": roomUrl
             ])
         }
@@ -96,6 +105,8 @@ final class SignalingManager {
     }
     
     func sendSignal(_ data: [String: Any]) { socket.emit("signal", data) }
+
+    func deleteRoom(meetingId: String) { socket.emit("deleteRoom", meetingId) }
     
     // Disconnect
     func disconnect() { socket.disconnect() }
