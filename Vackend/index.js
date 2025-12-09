@@ -88,9 +88,9 @@ io.on('connection', (socket) => {
   });
 
   // Callee accepts the call
-  socket.on('acceptCall', ({ from, to, roomUrl }) => {
+  socket.on('acceptCall', ({ from, to, meetingId, roomUrl }) => {
     if (users[from]) {
-      io.to(users[from]).emit('callAccepted', { roomUrl });
+      io.to(users[from]).emit('callAccepted', { meetingId, roomUrl });
       console.log(`User ${to} accepted call from ${from}`);
     }
   });
