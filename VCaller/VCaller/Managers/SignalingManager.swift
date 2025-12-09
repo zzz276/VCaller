@@ -16,7 +16,7 @@ final class SignalingManager {
     private let defaults = UserDefaults.standard
 
     private init(roomID: String) {
-        self.manager = SocketManager(socketURL: URL(string: "http://localhost:3000")!, config: [.log(true), .compress, .forceWebsockets(true)])
+        self.manager = SocketManager(socketURL: URL(string: "https://zzeni2125-2dd06170-7cc1-41ee-8684-7999c820124a.socketxp.com")!, config: [.log(true), .compress, .forceWebsockets(true)])
         self.socket = manager.defaultSocket
         
         listeners()
