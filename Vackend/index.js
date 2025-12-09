@@ -56,6 +56,8 @@ io.on('connection', (socket) => {
       const roomUrl = data.roomUrl;
 
       // 2. Send callRequest to the callee with the roomUrl
+      io.to(users[from]).emit('getRequest', { meetingId, roomUrl });
+
       io.to(users[to]).emit('callRequest', { from, meetingId, roomUrl });
 
       console.log(`Room created: ${roomUrl}, sent to ${to}`);
@@ -73,7 +75,15 @@ io.on('connection', (socket) => {
         }
       });
 
-      console.log(response.body);
+      if (response.status(429)) {
+        const data = response.json();
+
+        console.log(data["error"]);
+      } else if (response.status(401)) {
+        console.log('Access token is missing or invalid.');
+      } else {
+        console.log(`Room with room ID: ${meetingId} was deleted successfully.`);
+      }
     } catch (err) { console.error('Error deleting Whereby room:', err); }
   });
 
