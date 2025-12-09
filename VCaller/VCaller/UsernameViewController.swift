@@ -11,7 +11,18 @@ import WherebySDK
 class UsernameViewController: UIViewController {
 
     @IBOutlet weak var targetUsername: UITextField!
-    override func viewDidLoad() { super.viewDidLoad() }
+    private var currentCallTarget: String?
+    private var waitingForCallResponse = false
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupNotificationObservers()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        removeNotificationObservers()
+    }
 
     @IBAction func btnCallRandom(_ sender: Any) {
 //        createRoom { [weak self] result in
@@ -46,28 +57,21 @@ class UsernameViewController: UIViewController {
             return
         }
         
-        let roomURL = URL(string: url)!
-        let config = WherebyRoomConfig(url: roomURL)
-        let roomVC = WherebyRoomViewController(config: config, isPushedInNavigationController: true)
+        let defaults = UserDefaults.standard
+        guard let currentUserId = defaults.string(forKey: idKey) else {
+            showAlert(title: "Error", message: "User not logged in")
+            return
+        }
         
-        navigationController?.pushViewController(roomVC, animated: true)
-        roomVC.join()
+        // Store the target for later use
+        currentCallTarget = target
+        waitingForCallResponse = true
         
-//        createRoom { [weak self] result in
-//            
-//            switch result {
-//            case .success(let roomDetails):
-//                print("Room created successfully. URL: \(roomDetails.roomUrl)")
-//                        
-//                // --- CRUCIAL STEP: Navigate to the Call View ---
-//                self?.navigateToCallView(with: roomDetails)
-//                
-//            case .failure(let error):
-//                print("Error creating room: \(error.localizedDescription)")
-//                // Handle the error (e.g., show an alert)
-//                self?.showAlert(message: "Failed to start call. Please try again.")
-//            }
-//        }
+        // Show waiting alert
+        showAlert(title: "Calling...", message: "Calling \(target)")
+        
+        // Initiate the call through signaling manager
+        SignalingManager.shared.callUser(from: currentUserId, to: target)
     }
     
     // Function to navigate to the call view controller
@@ -89,5 +93,74 @@ class UsernameViewController: UIViewController {
         let ac = UIAlertController(title: title, message: message, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "OK", style: .default))
         present(ac, animated: true)
+    }
+    
+    // MARK: - Notification Observers
+    
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleCallAccepted(_:)),
+            name: .callAccepted,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleCallRejected(_:)),
+            name: .callRejected,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleRoomCreated(_:)),
+            name: .roomCreated,
+            object: nil
+        )
+    }
+    
+    private func removeNotificationObservers() {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func handleCallAccepted(_ notification: Notification) {
+        guard waitingForCallResponse else { return }
+        waitingForCallResponse = false
+        
+        guard let userInfo = notification.userInfo,
+              let roomUrl = userInfo["roomUrl"] as? String else {
+            return
+        }
+        
+        // Navigate to the call room
+        navigateToCallRoom(roomUrl: roomUrl)
+    }
+    
+    @objc private func handleCallRejected(_ notification: Notification) {
+        guard waitingForCallResponse else { return }
+        waitingForCallResponse = false
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.showAlert(title: "Call Rejected", message: "The call was rejected by \(self?.currentCallTarget ?? "the user")")
+        }
+    }
+    
+    @objc private func handleRoomCreated(_ notification: Notification) {
+        // This is for the caller - room was created, waiting for callee to accept
+        // Could show a "Waiting for answer..." message if needed
+        print("Room created, waiting for call acceptance...")
+    }
+    
+    private func navigateToCallRoom(roomUrl: String) {
+        guard let roomURL = URL(string: roomUrl) else { return }
+        
+        let config = WherebyRoomConfig(url: roomURL)
+        let roomVC = WherebyRoomViewController(config: config, isPushedInNavigationController: true)
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.navigationController?.pushViewController(roomVC, animated: true)
+            roomVC.join()
+        }
     }
 }

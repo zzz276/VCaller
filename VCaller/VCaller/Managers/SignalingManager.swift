@@ -15,7 +15,7 @@ final class SignalingManager {
     
     private let defaults = UserDefaults.standard
 
-    private init(roomID: String) {
+    private init() {
         self.manager = SocketManager(socketURL: URL(string: "https://zzeni2125-2dd06170-7cc1-41ee-8684-7999c820124a.socketxp.com")!, config: [.log(true), .compress, .forceWebsockets(true)])
         self.socket = manager.defaultSocket
         
@@ -37,6 +37,13 @@ final class SignalingManager {
             guard let dict = data.first as? [String: Any],
                   let meetingId = dict["meetingId"] as? String,
                   let roomUrl = dict["roomUrl"] as? String else { return }
+            
+            print("Room created - Meeting ID: \(meetingId), Room URL: \(roomUrl)")
+            
+            NotificationCenter.default.post(name: .roomCreated, object: nil, userInfo: [
+                "meetingId": meetingId,
+                "roomUrl": roomUrl
+            ])
         }
         
         socket.on("callRequest") { data, _ in
@@ -117,4 +124,5 @@ extension Notification.Name {
     static let callAccepted = Notification.Name("callAccepted")
     static let callRejected = Notification.Name("callRejected")
     static let signalReceived = Notification.Name("signalReceived")
+    static let roomCreated = Notification.Name("roomCreated")
 }

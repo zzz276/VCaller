@@ -7,6 +7,7 @@
 
 import FirebaseFirestore
 import UIKit
+import WherebySDK
 
 class ViewController: UIViewController {
     
@@ -19,11 +20,18 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         updateUsernameDisplay()
+        setupNotificationObservers()
+        connectSignalingManager()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateUsernameDisplay()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        removeNotificationObservers()
     }
 
     private func updateUsernameDisplay() {
@@ -66,6 +74,9 @@ class ViewController: UIViewController {
 
     // Connect your Logout button to this action
     @IBAction func logoutButtonTapped(_ sender: UIButton) {
+        // Disconnect from signaling server
+        SignalingManager.shared.disconnect()
+        
         // Clear saved username
         let defaults = UserDefaults.standard
         
@@ -95,6 +106,79 @@ class ViewController: UIViewController {
         } else {
             UIApplication.shared.windows.first?.rootViewController = login
             UIApplication.shared.windows.first?.makeKeyAndVisible()
+        }
+    }
+    
+    // MARK: - Signaling Manager Setup
+    
+    private func connectSignalingManager() {
+        // Only connect if user is logged in
+        if UserDefaults.standard.string(forKey: idKey) != nil {
+            SignalingManager.shared.connect()
+        }
+    }
+    
+    // MARK: - Notification Observers
+    
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleIncomingCall(_:)),
+            name: .incomingCall,
+            object: nil
+        )
+    }
+    
+    private func removeNotificationObservers() {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func handleIncomingCall(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let from = userInfo["from"] as? String,
+              let meetingId = userInfo["meetingId"] as? String,
+              let roomUrl = userInfo["roomUrl"] as? String else {
+            return
+        }
+        
+        let defaults = UserDefaults.standard
+        guard let currentUserId = defaults.string(forKey: idKey) else { return }
+        
+        // Show alert with Accept/Reject options
+        let alert = UIAlertController(
+            title: "Incoming Call",
+            message: "Call from \(from)",
+            preferredStyle: .alert
+        )
+        
+        // Accept action
+        alert.addAction(UIAlertAction(title: "Accept", style: .default) { [weak self] _ in
+            SignalingManager.shared.acceptCall(from: from, to: currentUserId, roomUrl: roomUrl)
+            
+            // Navigate to the call room
+            self?.navigateToCallRoom(roomUrl: roomUrl)
+        })
+        
+        // Reject action
+        alert.addAction(UIAlertAction(title: "Reject", style: .cancel) { _ in
+            SignalingManager.shared.rejectCall(from: from, to: currentUserId)
+        })
+        
+        // Present alert on main thread
+        DispatchQueue.main.async { [weak self] in
+            self?.present(alert, animated: true)
+        }
+    }
+    
+    private func navigateToCallRoom(roomUrl: String) {
+        guard let roomURL = URL(string: roomUrl) else { return }
+        
+        let config = WherebyRoomConfig(url: roomURL)
+        let roomVC = WherebyRoomViewController(config: config, isPushedInNavigationController: true)
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.navigationController?.pushViewController(roomVC, animated: true)
+            roomVC.join()
         }
     }
 }
