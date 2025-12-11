@@ -55,7 +55,7 @@ io.on('connection', (socket) => {
         const errorData = await response.json().catch(() => ({ message: 'No JSON body or body unreadable.' }));
         console.error(`Whereby API Error: HTTP Status ${response.status}`, errorData);
         // Inform the caller that the call failed (optional but good practice)
-        io.to(users[from]).emit('callFailed', { reason: `Call failed: API error ${response.status}.` });
+        io.to(users[from]).emit('callFailed', { reason: `Call failed: API error ${response.status}` });
 
         return;
       }
