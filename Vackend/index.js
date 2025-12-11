@@ -32,7 +32,7 @@ io.on('connection', (socket) => {
       return;
     }
 
-    let endDate = new Date(Date.now() + (24 * 60 * 60 * 1000));
+    let endDate = new Date(Date.now() + (7 * 24 * 60 * 60 * 1000));
 
     try {
       // 1. Create a Whereby room via API
@@ -43,13 +43,22 @@ io.on('connection', (socket) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "endDate": `"${endDate.toISOString()}"`,
+          "endDate": endDate.toISOString(),
           "isLocked": false,
           "roomMode": "normal",
           "roomNamePrefix": "v-call",
           "roomNamePattern": "human-short"
         })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'No JSON body or body unreadable.' }));
+        console.error(`Whereby API Error: HTTP Status ${response.status}`, errorData);
+        // Inform the caller that the call failed (optional but good practice)
+        io.to(users[from]).emit('callFailed', { reason: `Call failed: API error ${response.status}.` });
+
+        return;
+      }
 
       const data = await response.json();
       const meetingId = data.meetingId;
