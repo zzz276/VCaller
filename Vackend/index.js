@@ -5,7 +5,11 @@ import 'dotenv/config';
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' }});
+const io = new Server(server, {
+  cors: { origin: '*' },
+  pingInterval: 30000,
+  pingTimeout: 15000,
+});
 
 const PORT = process.env.PORT || 3000;
 const WHEREBY_API_KEY = process.env.WHEREBY_API_KEY;
