@@ -25,13 +25,13 @@ io.on('connection', (socket) => {
   socket.on('register', (userId) => {
     users[userId] = socket.id;
 
-    console.log(`Registered user ${userId} with socket ${socket.id}`);
+    console.log(`Registered user ${ userId } with socket ${ socket.id }`);
   });
 
   // Caller initiates a call
   socket.on('callUser', async ({ from, to }) => {
     if (!users[to]) {
-      console.log(`User ${to} not connected`);
+      console.log(`User ${ to } not connected`);
 
       return;
     }
@@ -43,9 +43,10 @@ io.on('connection', (socket) => {
       const response = await fetch(WHEREBY_API_URL, {
         method: 'POST',
         headers: {
-          "Authorization": `Bearer ${WHEREBY_API_KEY}`,
+          "Authorization": `Bearer ${ WHEREBY_API_KEY }`,
           "Content-Type": "application/json"
         },
+
         body: JSON.stringify({
           "endDate": endDate.toISOString(),
           "isLocked": false,
@@ -57,9 +58,9 @@ io.on('connection', (socket) => {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'No JSON body or body unreadable.' }));
-        console.error(`Whereby API Error: HTTP Status ${response.status}`, errorData);
+        console.error(`Whereby API Error: HTTP Status ${ response.status }`, errorData);
         // Inform the caller that the call failed (optional but good practice)
-        io.to(users[from]).emit('callFailed', { reason: `Call failed: API error ${response.status}` });
+        io.to(users[from]).emit('callFailed', { reason: `Call failed: API error ${ response.status }` });
 
         return;
       }
@@ -73,17 +74,17 @@ io.on('connection', (socket) => {
 
       io.to(users[to]).emit('callRequest', { from, meetingId, roomUrl });
 
-      console.log(`Room created: ${roomUrl}, sent to ${to}`);
+      console.log(`Room created: ${ roomUrl }, sent to ${ to }`);
     } catch (err) { console.error('Error creating Whereby room:', err); }
   });
 
   socket.on('deleteRoom', async ({ meetingId }) => {
     try {
       // 3. Delete a Whereby room via API
-      const response = await fetch(`${WHEREBY_API_URL}/${meetingId}`, {
+      const response = await fetch(`${ WHEREBY_API_URL }/${ meetingId }`, {
         method: 'DELETE',
         headers: {
-          "Authorization": `Bearer ${WHEREBY_API_KEY}`,
+          "Authorization": `Bearer ${ WHEREBY_API_KEY }`,
           "Content-Type": "application/json"
         }
       });
@@ -95,16 +96,16 @@ io.on('connection', (socket) => {
       } else if (response.status(401)) {
         console.log('Access token is missing or invalid.');
       } else {
-        console.log(`Room with room ID: ${meetingId} was deleted successfully.`);
+        console.log(`Room with room ID: ${ meetingId } was deleted successfully.`);
       }
     } catch (err) { console.error('Error deleting Whereby room:', err); }
   });
 
   // Callee accepts the call
-  socket.on('acceptCall', ({ from, to, meetingId, roomUrl }) => {
+  socket.on('acceptCall', ({ from, to, roomUrl }) => {
     if (users[from]) {
-      io.to(users[from]).emit('callAccepted', { meetingId, roomUrl });
-      console.log(`User ${to} accepted call from ${from}`);
+      io.to(users[from]).emit('callAccepted', { roomUrl });
+      console.log(`User ${ to } accepted call from ${ from }`);
     }
   });
 
@@ -112,7 +113,7 @@ io.on('connection', (socket) => {
   socket.on('rejectCall', ({ from, to }) => {
     if (users[from]) {
       io.to(users[from]).emit('callRejected');
-      console.log(`User ${to} rejected call from ${from}`);
+      console.log(`User ${ to } rejected call from ${ from }`);
     }
   });
 
@@ -127,7 +128,8 @@ io.on('connection', (socket) => {
     for (const [userId, sId] of Object.entries(users)) {
       if (sId === socket.id) {
         delete users[userId];
-        console.log(`User ${userId} disconnected`);
+        console.log(`User ${ userId } disconnected`);
+
         break;
       }
     }
@@ -136,6 +138,6 @@ io.on('connection', (socket) => {
 
 // Start the server
 server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-    console.log(`Whereby API Key is set: ${!!WHEREBY_API_KEY}`);
+    console.log(`Server listening on port ${ PORT }`);
+    console.log(`Whereby API Key is set: ${ !!WHEREBY_API_KEY }`);
 });
