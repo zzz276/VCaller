@@ -79,6 +79,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('deleteRoom', async ({ meetingId }) => {
+    let meetingID = meetingId;
+
     try {
       // 3. Delete a Whereby room via API
       const response = await fetch(`${ WHEREBY_API_URL }/${ meetingId }`, {
@@ -96,7 +98,7 @@ io.on('connection', (socket) => {
       } else if (response.status == 401) {
         console.log('Access token is missing or invalid.');
       } else {
-        console.log(`Room with room ID: ${ meetingId } was deleted successfully.`);
+        console.log(`Room with room ID: ${ meetingID } was deleted successfully.`);
       }
     } catch (err) { console.error('Error deleting Whereby room:', err); }
   });
