@@ -89,11 +89,11 @@ io.on('connection', (socket) => {
         }
       });
 
-      if (response.status(429)) {
+      if (response.status == 429) {
         const data = response.json();
 
         console.log(data["error"]);
-      } else if (response.status(401)) {
+      } else if (response.status == 401) {
         console.log('Access token is missing or invalid.');
       } else {
         console.log(`Room with room ID: ${ meetingId } was deleted successfully.`);
