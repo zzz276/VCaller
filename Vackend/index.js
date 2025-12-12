@@ -43,7 +43,7 @@ io.on('connection', (socket) => {
       const response = await fetch(WHEREBY_API_URL, {
         method: 'POST',
         headers: {
-          "Authorization": "Bearer " + WHEREBY_API_KEY,
+          "Authorization": `Bearer ${WHEREBY_API_KEY}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -83,7 +83,7 @@ io.on('connection', (socket) => {
       const response = await fetch(`${WHEREBY_API_URL}/${meetingId}`, {
         method: 'DELETE',
         headers: {
-          "Authorization": "Bearer " + WHEREBY_API_KEY,
+          "Authorization": `Bearer ${WHEREBY_API_KEY}`,
           "Content-Type": "application/json"
         }
       });
